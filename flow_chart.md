@@ -2,76 +2,88 @@
 %%{init: {
   "theme": "base",
   "themeVariables": {
+    "background": "#ffffff",
     "primaryTextColor": "#000000",
-    "secondaryTextColor": "#000000",
-    "tertiaryTextColor": "#000000",
-    "lineColor": "#222222",
+    "lineColor": "#000000",
     "fontFamily": "Arial",
-    "fontSize": "18px",
-    "fontWeight": "bold",
-    "nodeTextColor": "#000000"
+    "fontSize": "18px"
   }
 }}%%
 
 flowchart TD
 
-    A["Player Choice<br/>dialogue / action"]
+    A["<b>Player Choice</b><br/><b>dialogue / action</b>"]
+    B["<b>Observation</b><br/><b>strength · reliability · source</b>"]
 
-    B["Observation<br/>strength · reliability · source"]
-
-    C["Raw Feature Vector<br/><br/>
-    belief<br/>
-    uncertainty<br/>
-    prior<br/>
-    evidence<br/>
-    trust<br/>
-    suspicion<br/>
-    instability"]
-
-    D["JPC Predictive Coding Encoder<br/><br/>
-    raw features → latent z"]
-
-    E["Latent Representation<br/>z"]
-
-    F["Belief Head<br/>TensorFlow MLP<br/><br/>
-    predicts delta alpha<br/>
-    predicts delta beta"]
-
-    G["Policy Head<br/>TensorFlow MLP<br/><br/>
-    predicts action logits"]
-
-    H["Belief Update<br/><br/>
-    alpha += softplus delta alpha<br/>
-    beta += softplus delta beta"]
-
-    I["Action Selection<br/><br/>
-    dismiss<br/>
-    probe<br/>
-    reveal<br/>
-    confront"]
-
-    J["NPC State Update<br/><br/>
-    belief<br/>
-    uncertainty<br/>
-    confidence<br/>
-    memory<br/>
-    trust<br/>
-    suspicion<br/>
-    instability"]
-
-    K["Next Game Step"]
-
-    %% =====================================================
-    %% MAIN FLOW
-    %% =====================================================
+    C["<b>Raw Feature Vector</b><br/><br/>
+    <b>belief</b><br/>
+    <b>uncertainty</b><br/>
+    <b>prior</b><br/>
+    <b>evidence</b><br/>
+    <b>trust</b><br/>
+    <b>suspicion</b><br/>
+    <b>instability</b>"]
 
     A --> B
     B --> C
-    C --> D
+
+    subgraph M["<b>Hard-coded forward model used during training</b>"]
+        direction LR
+        M2["<b>latent teacher</b>"]
+        M1["<b>free energy</b>"]
+        M3["<b>belief delta teacher</b>"]
+        M4["<b>policy teacher</b>"]
+    end
+
+    C --> M
+
+    D["<b>JPC Predictive Coding Encoder</b><br/><br/>
+    <b>raw features → latent z</b>"]
+
+    E["<b>Latent Representation</b><br/><b>z</b>"]
+
+    F["<b>Belief Head</b><br/>
+    <b>TensorFlow MLP</b><br/><br/>
+    <b>predicts delta alpha</b><br/>
+    <b>predicts delta beta</b>"]
+
+    G["<b>Policy Head</b><br/>
+    <b>TensorFlow MLP</b><br/><br/>
+    <b>predicts action logits</b>"]
+
+    H["<b>Belief Update</b><br/><br/>
+    <b>alpha += softplus</b><br/>
+    <b>delta alpha</b><br/><br/>
+    <b>beta += softplus</b><br/>
+    <b>delta beta</b>"]
+
+    I["<b>Action Selection</b><br/><br/>
+    <b>dismiss</b><br/>
+    <b>probe</b><br/>
+    <b>reveal</b><br/>
+    <b>confront</b>"]
+
+    J["<b>NPC State Update</b><br/><br/>
+    <b>belief</b><br/>
+    <b>uncertainty</b><br/>
+    <b>confidence</b><br/>
+    <b>memory</b><br/>
+    <b>trust</b><br/>
+    <b>suspicion</b><br/>
+    <b>instability</b>"]
+
+    K["<b>Next Game Step</b>"]
+
+    M2 -->|"trains"| D
+    M1 -.->|"shapes prediction error"| D
+
     D --> E
 
     E --> F
     E --> G
+
+    M3 -.->|"supervises"| F
+    M4 -.->|"supervises"| G
 
     F --> H
     G --> I
@@ -82,51 +94,21 @@ flowchart TD
     J --> K
     K --> A
 
-    %% =====================================================
-    %% HARD-CODED FORWARD MODEL
-    %% =====================================================
-
-    subgraph M["Hard-coded forward model used during training"]
-
-        M1["free energy"]
-
-        M2["latent teacher"]
-
-        M3["belief delta teacher"]
-
-        M4["policy teacher"]
-
-    end
-
-    %% =====================================================
-    %% TRAINING SIGNALS
-    %% =====================================================
-
-    C -. input state .-> M
-
-    M2 -. trains .-> D
-
-    M1 -. shapes prediction error .-> D
-
-    M3 -. supervises .-> F
-
-    M4 -. supervises .-> G
-
-    %% =====================================================
-    %% STYLING
-    %% =====================================================
-
-    classDef input fill:#ffffff,color:#000000,stroke:#222222,stroke-width:2px,font-weight:bold;
-    classDef pc fill:#dbeafe,color:#000000,stroke:#1d4ed8,stroke-width:3px,font-weight:bold;
-    classDef latent fill:#ede9fe,color:#000000,stroke:#6d28d9,stroke-width:3px,font-weight:bold;
-    classDef mlp fill:#dcfce7,color:#000000,stroke:#15803d,stroke-width:3px,font-weight:bold;
-    classDef update fill:#fef3c7,color:#000000,stroke:#b45309,stroke-width:3px,font-weight:bold;
-    classDef model fill:#fee2e2,color:#000000,stroke:#b91c1c,stroke-width:3px,font-weight:bold;
+    classDef input fill:#ffffff,color:#000000,stroke:#000000,stroke-width:2px;
+    classDef model fill:#fde2e2,color:#000000,stroke:#dc2626,stroke-width:3px;
+    classDef teacher fill:#ffecec,color:#000000,stroke:#dc2626,stroke-width:2px;
+    classDef pc fill:#dbeafe,color:#000000,stroke:#2563eb,stroke-width:3px;
+    classDef latent fill:#f3e8ff,color:#000000,stroke:#7e22ce,stroke-width:3px;
+    classDef mlp fill:#dcfce7,color:#000000,stroke:#16a34a,stroke-width:3px;
+    classDef update fill:#fef3c7,color:#000000,stroke:#d97706,stroke-width:3px;
 
     class A,B,C,J,K input;
+    class M model;
+    class M1,M2,M3,M4 teacher;
     class D pc;
     class E latent;
     class F,G mlp;
     class H,I update;
-    class M,M1,M2,M3,M4 model;
+
+    linkStyle default stroke:#000000,stroke-width:2px;
 ```
